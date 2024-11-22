@@ -43,9 +43,8 @@ func GetAuthConfig() (*AuthConfig, error) {
 	}
 
 	config := &oauth2.Config{
-		ClientID:     os.Getenv("GCP_CLIENT_ID"),
-		ClientSecret: os.Getenv("GCP_CLIENT_SECRET"),
-		RedirectURL:  os.Getenv("CALLBACK_URL"),
+		ClientID:    os.Getenv("GCP_CLIENT_ID"),
+		RedirectURL: os.Getenv("CALLBACK_URL"),
 		Scopes: []string{
 			"https://www.googleapis.com/auth/spreadsheets",
 			"https://www.googleapis.com/auth/userinfo.email",
