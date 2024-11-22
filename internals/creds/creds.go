@@ -3,51 +3,28 @@ package creds
 import "github.com/zalando/go-keyring"
 
 const (
-	keyringServiceName  = "expense-tracker"
-	keyringAccessToken  = "access_token"
-	keyringRefreshToken = "refresh_token"
+	KeyringServiceName  = "expense-tracker"
+	KeyringAccessToken  = "access_token"
+	KeyringRefreshToken = "refresh_token"
+	KeyringSpreadsheet  = "spreadsheet"
 )
 
-func GetAccessToken() (string, error) {
-	token, err := keyring.Get(keyringServiceName, keyringAccessToken)
+func Get(k string) (string, error) {
+	v, err := keyring.Get(KeyringServiceName, k)
 	if err != nil {
-		return "", err
+		return "", nil
 	}
-	return token, nil
+	return v, nil
 }
 
-func SetAccessToken(token string) error {
-	err := keyring.Set(keyringServiceName, keyringAccessToken, token)
-	if err != nil {
-		return err
-	}
-	return nil
+func Set(k string, v string) error {
+	return keyring.Set(KeyringServiceName, k, v)
 }
 
-func GetRefreshToken() (string, error) {
-	token, err := keyring.Get(keyringServiceName, keyringRefreshToken)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
-}
-
-func SetRefreshToken(token string) error {
-	err := keyring.Set(keyringServiceName, keyringRefreshToken, token)
-	if err != nil {
-		return err
-	}
-	return nil
+func Delete(k string) error {
+	return keyring.Delete(KeyringServiceName, k)
 }
 
 func DeleteAll() error {
-	err := keyring.Delete(keyringServiceName, keyringAccessToken)
-	if err != nil {
-		return err
-	}
-	err = keyring.Delete(keyringServiceName, keyringRefreshToken)
-	if err != nil {
-		return err
-	}
-	return nil
+	return keyring.DeleteAll(KeyringServiceName)
 }

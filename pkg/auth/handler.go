@@ -90,8 +90,8 @@ func CallbackHandler(config *config.AuthConfig) http.HandlerFunc {
 		// userData := &UserDataSchema{}
 		// json.Unmarshal([]byte(contents), userData)
 
-		creds.SetAccessToken(token.AccessToken)
-		creds.SetRefreshToken(token.RefreshToken)
+		creds.Set(creds.KeyringAccessToken, token.AccessToken)
+		creds.Set(creds.KeyringRefreshToken, token.RefreshToken)
 		http.Redirect(w, r, "/auth/success", fiber.StatusPermanentRedirect)
 	}
 }

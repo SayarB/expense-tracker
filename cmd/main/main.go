@@ -28,17 +28,22 @@ func main() {
 		fmt.Println("User is already logged in")
 	}
 
-	accessToken, err := creds.GetAccessToken()
+	accessToken, err := creds.Get(creds.KeyringAccessToken)
 	if err != nil {
 		panic(err)
 	}
 
-	refreshToken, err := creds.GetRefreshToken()
+	refreshToken, err := creds.Get(creds.KeyringRefreshToken)
 	if err != nil {
 		panic(err)
 	}
 
 	token := &oauth2.Token{AccessToken: accessToken, RefreshToken: refreshToken, TokenType: "Bearer"}
 
-	sheetsutil.CreateSpreadsheet(&sheetsutil.SpreadsheetConfig{Name: "Expenses234234"}, authConfig, token)
+	sheet, err := sheetsutil.CreateSpreadsheet(&sheetsutil.SpreadsheetConfig{Name: "Expenses234234"}, authConfig, token)
+	if err != nil {
+		panic(err)
+	}
+
+	creds.Set(creds.KeyringSpreadsheet, sheet.SpreadsheetId)
 }

@@ -3,6 +3,7 @@ package sheetsutil
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/sayarb/expense-tracker/internals/config"
 	"golang.org/x/oauth2"
@@ -14,14 +15,16 @@ type SpreadsheetConfig struct {
 	Name string
 }
 
+var SheetsService *sheets.Service
+
 func createSheetsService(config *config.AuthConfig, token *oauth2.Token) (*sheets.Service, error) {
 
 	client := config.OAuthConfig.Client(context.Background(), token)
-
-	return sheets.NewService(context.Background(), option.WithHTTPClient(client))
+	SheetsService, err := sheets.NewService(context.Background(), option.WithHTTPClient(client))
+	return SheetsService, err
 }
 
-func CreateSpreadsheet(spConf *SpreadsheetConfig, authConfig *config.AuthConfig, token *oauth2.Token) error {
+func CreateSpreadsheet(spConf *SpreadsheetConfig, authConfig *config.AuthConfig, token *oauth2.Token) (*sheets.Spreadsheet, error) {
 	spreadsheet := &sheets.Spreadsheet{
 		Properties: &sheets.SpreadsheetProperties{
 			Title: spConf.Name,
@@ -37,9 +40,15 @@ func CreateSpreadsheet(spConf *SpreadsheetConfig, authConfig *config.AuthConfig,
 	newSpreadsheet, err := service.Spreadsheets.Create(spreadsheet).Do()
 
 	if err != nil {
-		return err
+		return nil, err
 	}
-	
-	fmt.Println(newSpreadsheet.SpreadsheetId)
-	return nil
+
+	_, err = service.Spreadsheets.Values.Append(newSpreadsheet.SpreadsheetId, "A1:B1", &sheets.ValueRange{MajorDimension: "ROWS", Values: [][]interface{}{{"A", "B"}}}).ValueInputOption("USER_ENTERED").Do()
+
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	fmt.Printf("Spreadsheet created with ID: %s\n", newSpreadsheet.SpreadsheetId)
+	return newSpreadsheet, nil
 }

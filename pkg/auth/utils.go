@@ -6,7 +6,7 @@ import (
 )
 
 func IsUserLoggedIn() bool {
-	token, err := creds.GetAccessToken()
+	token, err := creds.Get(creds.KeyringAccessToken)
 	if err != nil {
 		return false
 	}
