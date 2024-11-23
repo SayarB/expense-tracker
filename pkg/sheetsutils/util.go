@@ -15,16 +15,18 @@ type SpreadsheetConfig struct {
 	Name string
 }
 
-var SheetsService *sheets.Service
+type SpreadsheetService struct {
+	Service     *sheets.Service
+	Spreadsheet *sheets.Spreadsheet
+}
 
 func createSheetsService(config *config.AuthConfig, token *oauth2.Token) (*sheets.Service, error) {
-
 	client := config.OAuthConfig.Client(context.Background(), token)
 	SheetsService, err := sheets.NewService(context.Background(), option.WithHTTPClient(client))
 	return SheetsService, err
 }
 
-func CreateSpreadsheet(spConf *SpreadsheetConfig, authConfig *config.AuthConfig, token *oauth2.Token) (*sheets.Spreadsheet, error) {
+func CreateSpreadsheet(spConf *SpreadsheetConfig, authConfig *config.AuthConfig, token *oauth2.Token) (*SpreadsheetService, error) {
 	spreadsheet := &sheets.Spreadsheet{
 		Properties: &sheets.SpreadsheetProperties{
 			Title: spConf.Name,
@@ -50,5 +52,5 @@ func CreateSpreadsheet(spConf *SpreadsheetConfig, authConfig *config.AuthConfig,
 	}
 
 	fmt.Printf("Spreadsheet created with ID: %s\n", newSpreadsheet.SpreadsheetId)
-	return newSpreadsheet, nil
+	return &SpreadsheetService{Service: service, Spreadsheet: newSpreadsheet}, nil
 }
