@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -90,8 +91,11 @@ func CallbackHandler(config *config.AuthConfig) http.HandlerFunc {
 		// userData := &UserDataSchema{}
 		// json.Unmarshal([]byte(contents), userData)
 
-		creds.Set(creds.KeyringAccessToken, token.AccessToken)
-		creds.Set(creds.KeyringRefreshToken, token.RefreshToken)
+		tokenJson, err := json.Marshal(token)
+		if err != nil {
+			log.Println(err.Error())
+		}
+		creds.Set(creds.KeyringToken, string(tokenJson))
 		http.Redirect(w, r, "/auth/success", fiber.StatusPermanentRedirect)
 	}
 }

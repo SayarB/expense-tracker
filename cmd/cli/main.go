@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/sayarb/expense-tracker/internals/config"
 	"github.com/sayarb/expense-tracker/internals/creds"
+	"github.com/sayarb/expense-tracker/internals/storage"
 	"github.com/sayarb/expense-tracker/pkg/auth"
 	sheetsutil "github.com/sayarb/expense-tracker/pkg/sheetsutils"
 	"github.com/spf13/cobra"
@@ -55,17 +58,32 @@ var createSpreadsheetCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		accessToken, err := creds.Get(creds.KeyringAccessToken)
+		tokenJson, err := creds.Get(creds.KeyringToken)
 		if err != nil {
 			panic(err)
 		}
-		refreshToken, err := creds.Get(creds.KeyringRefreshToken)
+		token := &oauth2.Token{}
+		json.Unmarshal([]byte(tokenJson), token)
+
+		spId, err := creds.Get(creds.KeyringSpreadsheet)
 		if err != nil {
 			panic(err)
 		}
-		token := &oauth2.Token{AccessToken: accessToken, RefreshToken: refreshToken, TokenType: "Bearer"}
+		fmt.Printf("Found Spreadsheet ID: %s\n", spId)
+
+		sheetService, err := sheetsutil.GetSpreadsheet(spId, authConfig, token)
+		if err == nil && sheetService.Spreadsheet.Properties.Title == args[0] {
+			fmt.Println("Spreadsheet already exists")
+			value, err := sheetService.GetHeaders()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Print(value.Values)
+			return
+		}
+
 		spConf := &sheetsutil.SpreadsheetConfig{Name: args[0]}
-		sheetService, err := sheetsutil.CreateSpreadsheet(spConf, authConfig, token)
+		sheetService, err = sheetsutil.CreateSpreadsheet(spConf, authConfig, token)
 
 		if err != nil {
 			panic(err)
@@ -77,10 +95,52 @@ var createSpreadsheetCmd = &cobra.Command{
 	},
 }
 
+var addExpenseCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add an expense to the spreadsheet",
+	Long:  "Add an expense to the spreadsheet",
+	Run: func(cmd *cobra.Command, args []string) {
+		authConfig, err := config.GetAuthConfig()
+		if err != nil {
+			panic(err)
+		}
+		tokenJson, err := creds.Get(creds.KeyringToken)
+		if err != nil {
+			panic(err)
+		}
+		token := &oauth2.Token{}
+		json.Unmarshal([]byte(tokenJson), token)
+
+		spId, err := creds.Get(creds.KeyringSpreadsheet)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("Found Spreadsheet ID: %s\n", spId)
+
+		sheetService, err := sheetsutil.GetSpreadsheet(spId, authConfig, token)
+		if err != nil {
+			panic(err)
+		}
+
+		var row []interface{}
+		row = append(row, time.Now().Format(time.DateTime))
+		row = append(row, args[0])
+		row = append(row, args[1])
+		row = append(row, args[2])
+
+		err = sheetService.AddExpense(row)
+		if err != nil {
+			panic(err)
+		}
+	},
+}
+
 func init() {
 	config.LoadEnv()
+	storage.ReadConfigFile()
 	rootCmd.AddCommand(loginCmd)
 	rootCmd.AddCommand(createSpreadsheetCmd)
+	rootCmd.AddCommand(addExpenseCmd)
 }
 
 func main() {
