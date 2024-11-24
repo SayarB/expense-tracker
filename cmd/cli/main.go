@@ -132,6 +132,8 @@ var addExpenseCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+
+		fmt.Printf("Expense added successfully\nCheckout the changes at %s\n", sheetService.Spreadsheet.SpreadsheetUrl)
 	},
 }
 
